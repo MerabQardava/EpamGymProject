@@ -30,13 +30,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
         String token = null;
-
-        if(authHeader!=null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-
-            System.out.println(jwtService.validateToken(token));
-        }
-
+        String txId=request.getHeader("X-Transaction-ID");
 
 
 

@@ -11,6 +11,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Enumeration;
+
 @Configuration
 @Slf4j
 public class FeignConfig {
@@ -24,6 +26,14 @@ public class FeignConfig {
             if (attributes != null) {
                 HttpServletRequest request = attributes.getRequest();
                 String authHeader = request.getHeader("Authorization");
+
+                String txId = (String) request.getAttribute("X-Transaction-ID");
+
+                if (txId != null) {
+                    requestTemplate.header("X-Transaction-ID", txId);
+                }
+
+
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                     String jwtToken = authHeader.substring(7);
                     if (requestTemplate.body() != null) {

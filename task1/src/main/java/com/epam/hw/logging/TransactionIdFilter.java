@@ -20,7 +20,7 @@ public class TransactionIdFilter implements Filter {
 
 
         ((HttpServletResponse) response).setHeader("X-Transaction-ID", txId);
-
+        request.setAttribute("X-Transaction-ID", txId);
         try {
             chain.doFilter(request, response);
         } finally {
