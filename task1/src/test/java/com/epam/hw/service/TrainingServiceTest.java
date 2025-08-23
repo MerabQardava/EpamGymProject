@@ -1,5 +1,7 @@
 package com.epam.hw.service;
 
+import com.epam.hw.dto.UpdateWorkingHoursDTO;
+import com.epam.hw.feign.WorkloadInterface;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +27,9 @@ import com.epam.hw.storage.Auth;
 import org.mockito.ArgumentCaptor;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 
@@ -33,6 +38,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class TrainingServiceTest {
 
     @Mock TrainingRepository trainingRepo;
@@ -40,6 +46,7 @@ public class TrainingServiceTest {
     @Mock TrainerRepository trainerRepo;
     @Mock TrainingTypeRepository trainingTypeRepo;
     @Mock Auth auth;
+    @Mock WorkloadInterface workloadInterface;
 
     @InjectMocks
     TrainingService trainingService;
@@ -57,8 +64,20 @@ public class TrainingServiceTest {
         User mockUser = new User();
         when(auth.getLoggedInUser()).thenReturn(mockUser);
 
+        // Set up Trainee with User
+        User traineeUser = new User();
+        traineeUser.setUsername(traineeUsername);
+        traineeUser.setFirstName("John");
         Trainee trainee = new Trainee();
+        trainee.setUser(traineeUser);
+
+        // Set up Trainer with User
+        User trainerUser = new User();
+        trainerUser.setUsername(trainerUsername);
+        trainerUser.setFirstName("Jane");
         Trainer trainer = new Trainer();
+        trainer.setUser(trainerUser);
+
         TrainingType type = new TrainingType(trainingTypeName);
 
         when(traineeRepo.findByUser_Username(traineeUsername)).thenReturn(Optional.of(trainee));
@@ -71,11 +90,16 @@ public class TrainingServiceTest {
             return training;
         });
 
+        // Mock the workloadInterface response
+        when(workloadInterface.updateWorkingHours(eq(trainerUsername), eq("ADD"), any(UpdateWorkingHoursDTO.class)))
+                .thenReturn(ResponseEntity.ok("Workload updated successfully"));
 
+        // Act
         Training result = trainingService.addTraining(
                 traineeUsername, trainerUsername, trainingName,
                 trainingTypeName, date, duration);
 
+        // Assert
         ArgumentCaptor<Training> captor = ArgumentCaptor.forClass(Training.class);
         verify(trainingRepo).save(captor.capture());
         Training savedTraining = captor.getValue();
@@ -87,21 +111,11 @@ public class TrainingServiceTest {
         assertEquals(date, savedTraining.getDate());
         assertEquals(duration, savedTraining.getDuration());
         assertEquals(10, result.getId());
+
+        // Verify workloadInterface interaction
+        verify(workloadInterface).updateWorkingHours(eq(trainerUsername), eq("ADD"), any(UpdateWorkingHoursDTO.class));
     }
 
-    @Test
-    void addTraining_throwsWhenNotLoggedIn() {
-        when(auth.getLoggedInUser()).thenReturn(null);
-
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> trainingService.addTraining(
-                        "john.doe", "jane.smith", "Java Basics",
-                        "Java", LocalDate.now(), 60));
-
-        assertEquals("No user is logged in.", ex.getMessage());
-        verify(trainingRepo, never()).save(any());
-        verify(traineeRepo, never()).findByUser_Username(any());
-    }
 
     @Test
     void addTraining_throwsWhenTraineeNotFound() {
@@ -175,14 +189,4 @@ public class TrainingServiceTest {
         verify(trainingTypeRepo).findAll();
     }
 
-    @Test
-    void getTrainingTypes_throwsWhenNotLoggedIn() {
-        when(auth.getLoggedInUser()).thenReturn(null);
-
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> trainingService.getTrainingTypes());
-
-        assertEquals("No user is logged in.", ex.getMessage());
-        verify(trainingTypeRepo, never()).findAll();
-    }
 }

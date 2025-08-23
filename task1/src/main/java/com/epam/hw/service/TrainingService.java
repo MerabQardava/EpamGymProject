@@ -32,17 +32,20 @@ public class TrainingService {
     private final TrainerRepository trainerRepo;
     private final TrainingTypeRepository trainingTypeRepo;
 
-    @Autowired
+
     private WorkloadInterface workloadInterface;
 
+    @Autowired
     public TrainingService(TrainingRepository trainingRepo,
                            TraineeRepository traineeRepo,
                            TrainerRepository trainerRepo,
-                           TrainingTypeRepository trainingTypeRepo) {
+                           TrainingTypeRepository trainingTypeRepo,
+                           WorkloadInterface workloadInterface) {
         this.trainingRepo = trainingRepo;
         this.traineeRepo = traineeRepo;
         this.trainerRepo = trainerRepo;
         this.trainingTypeRepo = trainingTypeRepo;
+        this.workloadInterface = workloadInterface;
     }
 
     @Transactional
