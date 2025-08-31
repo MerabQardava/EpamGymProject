@@ -1,11 +1,13 @@
 package com.epam.hw.service;
 
+import com.epam.hw.dto.ActionType;
 import com.epam.hw.dto.UpdateWorkingHoursDTO;
 import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
 import com.epam.hw.entity.Training;
 import com.epam.hw.entity.TrainingType;
 import com.epam.hw.feign.WorkloadInterface;
+import com.epam.hw.messaging.MessageProducer;
 import com.epam.hw.repository.TraineeRepository;
 import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingRepository;
@@ -31,6 +33,7 @@ public class TrainingService {
     private final TraineeRepository traineeRepo;
     private final TrainerRepository trainerRepo;
     private final TrainingTypeRepository trainingTypeRepo;
+    private final MessageProducer messageProducer;
 
 
     private WorkloadInterface workloadInterface;
@@ -40,12 +43,14 @@ public class TrainingService {
                            TraineeRepository traineeRepo,
                            TrainerRepository trainerRepo,
                            TrainingTypeRepository trainingTypeRepo,
-                           WorkloadInterface workloadInterface) {
+                           WorkloadInterface workloadInterface,
+                           MessageProducer messageProducer) {
         this.trainingRepo = trainingRepo;
         this.traineeRepo = traineeRepo;
         this.trainerRepo = trainerRepo;
         this.trainingTypeRepo = trainingTypeRepo;
         this.workloadInterface = workloadInterface;
+        this.messageProducer = messageProducer;
     }
 
     @Transactional
@@ -82,6 +87,7 @@ public class TrainingService {
         );
 
         ResponseEntity<String> response = workloadInterface.updateWorkingHours(trainerUsername, "ADD", requestBody);
+        messageProducer.sendMessage(requestBody, ActionType.ADD);
         if (!response.getStatusCode().is2xxSuccessful()) {
             logger.warn("Failed to update workload for trainer: {}, status: {}", trainerUsername, response.getStatusCode());
             throw new RuntimeException("Failed to update workload: " + response.getStatusCode());
@@ -113,6 +119,7 @@ public class TrainingService {
         Integer duration = training.getDuration();
 
         trainingRepo.delete(training);
+        messageProducer.sendMessage(training, ActionType.REMOVE);
         logger.info("Training deleted with ID: {} for trainer: {}", trainingId, trainerUsername);
 
         UpdateWorkingHoursDTO requestBody = new UpdateWorkingHoursDTO(

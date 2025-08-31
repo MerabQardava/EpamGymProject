@@ -182,7 +182,7 @@ public class TrainerServiceTest {
         existingUser.setTrainer(existingTrainer);
         existingTrainer.setUser(existingUser);
 
-        UpdateTrainerDTO updateDTO = new UpdateTrainerDTO(newFirstName, newLastName, "Java",false);
+        UpdateTrainerDTO updateDTO = new UpdateTrainerDTO(newFirstName, newLastName, "Java",true);
 
         when(trainerRepository.findByUser_Username(username)).thenReturn(Optional.of(existingTrainer));
 
