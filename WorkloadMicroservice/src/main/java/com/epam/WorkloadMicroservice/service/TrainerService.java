@@ -66,6 +66,7 @@ public class TrainerService {
                 username, workYear.getYearNumber(), workMonth.getMonthNumber(), workMonth.getTotalHours());
     }
 
+    @Transactional
     public void removeTraining(String username, UpdateWorkingHoursDTO sessionData) {
         log.info("Removing training for username={}, sessionData={}", username, sessionData);
 
@@ -109,6 +110,7 @@ public class TrainerService {
                 username, workYear.getYearNumber(), workMonth.getMonthNumber(), workMonth.getTotalHours());
     }
 
+    @Transactional
     public int getTotalHours(String username, int year, int month) {
         log.info("Fetching total hours for username={}, year={}, month={}", username, year, month);
 

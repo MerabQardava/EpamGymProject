@@ -1,12 +1,14 @@
 package com.epam.hw.service;
 
+import com.epam.hw.dto.ActionType;
 import com.epam.hw.dto.GetWorkingHoursDTO;
 import com.epam.hw.dto.UpdateTrainerDTO;
 import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
 import com.epam.hw.entity.Training;
 import com.epam.hw.entity.User;
-import com.epam.hw.feign.WorkloadInterface;
+
+import com.epam.hw.messaging.MessageProducer;
 import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingRepository;
 import com.epam.hw.repository.UserRepository;
@@ -33,16 +35,18 @@ public class TrainerService {
     private final TrainerRepository trainerRepository;
     private final UserRepository userRepository;
     private final TrainingRepository trainingRepository;
+    private final MessageProducer messageProducer;
 
-    @Autowired
-    private WorkloadInterface workloadInterface;
+
 
     public TrainerService(TrainerRepository trainerRepository,
                           UserRepository userRepository,
-                          TrainingRepository trainingRepository) {
+                          TrainingRepository trainingRepository,
+                          MessageProducer messageProducer) {
         this.trainerRepository = trainerRepository;
         this.userRepository = userRepository;
         this.trainingRepository = trainingRepository;
+        this.messageProducer = messageProducer;
     }
 
     public Trainer getTrainerByUsername(String username) {
@@ -123,14 +127,11 @@ public class TrainerService {
             return new EntityNotFoundException("Trainer not found");
         });
 
-        ResponseEntity<String> response = workloadInterface.getWorkingHours(trainerUsername, getWorkingHoursDTO);
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            logger.warn("Failed to retrieve working hours for trainer: {}, status: {}", trainerUsername, response.getStatusCode());
-            throw new RuntimeException("Failed to retrieve working hours: " + response.getStatusCode());
-        }
 
+
+        String str = messageProducer.sendAndReceive(trainerUsername,getWorkingHoursDTO, ActionType.HOURS);
         logger.info("Successfully retrieved working hours for trainer: {}", trainerUsername);
-        return response.getBody();
+        return str;
     }
 
     public String getTrainerWorkingHoursFallback(String trainerUsername, GetWorkingHoursDTO getWorkingHoursDTO, Throwable t) {

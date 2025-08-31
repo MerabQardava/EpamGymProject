@@ -60,7 +60,7 @@ public class TrainingController {
                     dto.trainingTypeName(), LocalDate.parse(dto.date()), dto.duration());
             log.info("Training created successfully for trainee {} and trainer {}", traineeUsername, trainerUsername);
             sample.stop(metricsService.getRequestTimer());
-            return ResponseEntity.status(HttpStatus.CREATED).body("Training added successfully");
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body("Training creation request accepted");
         } catch (EntityNotFoundException e) {
             log.warn("Failed to create training for trainee: {}, trainer: {} - {}", traineeUsername, trainerUsername, e.getMessage());
             sample.stop(metricsService.getRequestTimer());
@@ -83,7 +83,7 @@ public class TrainingController {
             trainingService.deleteTraining(trainingId);
             log.info("Training deleted successfully with ID: {}", trainingId);
             sample.stop(metricsService.getRequestTimer());
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body("Training deletion request accepted");
         } catch (EntityNotFoundException e) {
             log.warn("Failed to delete training with ID: {} - {}", trainingId, e.getMessage());
             sample.stop(metricsService.getRequestTimer());
