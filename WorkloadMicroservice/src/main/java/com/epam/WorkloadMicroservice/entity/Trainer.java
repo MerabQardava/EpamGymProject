@@ -3,6 +3,8 @@ package com.epam.WorkloadMicroservice.entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,6 +12,9 @@ import java.util.Set;
 @Document(collection = "trainers")
 @Getter
 @NoArgsConstructor
+@CompoundIndexes({
+        @CompoundIndex(name = "trainer_name_idx", def = "{'firstName': 1, 'lastName': 1}")
+})
 public class Trainer {
     @Id
     private String username;
