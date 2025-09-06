@@ -1,8 +1,8 @@
 package com.epam.WorkloadMicroservice.repository;
 
 import com.epam.WorkloadMicroservice.entity.WorkYear;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface WorkYearRepository extends JpaRepository<WorkYear, Integer> {
+public interface WorkYearRepository extends MongoRepository<WorkYear, String> {
 
 }

@@ -7,7 +7,7 @@ import com.epam.WorkloadMicroservice.entity.WorkYear;
 import com.epam.WorkloadMicroservice.repository.TrainerRepository;
 import com.epam.WorkloadMicroservice.repository.WorkMonthRepository;
 import com.epam.WorkloadMicroservice.repository.WorkYearRepository;
-import jakarta.transaction.Transactional;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,17 +17,12 @@ import org.springframework.stereotype.Service;
 public class TrainerService {
 
     private final TrainerRepository trainerRepository;
-    private final WorkMonthRepository workMonthRepository;
-    private final WorkYearRepository workYearRepository;
 
     @Autowired
-    public TrainerService(TrainerRepository trainerRepository, WorkMonthRepository workMonthRepository, WorkYearRepository workYearRepository) {
+    public TrainerService(TrainerRepository trainerRepository) {
         this.trainerRepository = trainerRepository;
-        this.workMonthRepository = workMonthRepository;
-        this.workYearRepository = workYearRepository;
     }
 
-    @Transactional
     public void addTraining(String username, UpdateWorkingHoursDTO sessionData) {
         log.info("Adding training for username={}, sessionData={}", username, sessionData);
 
@@ -66,7 +61,6 @@ public class TrainerService {
                 username, workYear.getYearNumber(), workMonth.getMonthNumber(), workMonth.getTotalHours());
     }
 
-    @Transactional
     public void removeTraining(String username, UpdateWorkingHoursDTO sessionData) {
         log.info("Removing training for username={}, sessionData={}", username, sessionData);
 
@@ -110,7 +104,6 @@ public class TrainerService {
                 username, workYear.getYearNumber(), workMonth.getMonthNumber(), workMonth.getTotalHours());
     }
 
-    @Transactional
     public int getTotalHours(String username, int year, int month) {
         log.info("Fetching total hours for username={}, year={}, month={}", username, year, month);
 
@@ -134,15 +127,13 @@ public class TrainerService {
 
     // --- private helper methods ---
     private WorkMonth addMonth(int month, WorkYear workYear){
-        WorkMonth workMonth = new WorkMonth(month, workYear);
+        WorkMonth workMonth = new WorkMonth(month, 0);
         workYear.addWorkMonth(workMonth);
         return workMonth;
     }
 
-    private WorkYear addYear(int Year, Trainer trainer){
-        WorkYear workYear = new WorkYear();
-        workYear.setYearNumber(Year);
-        workYear.setTrainer(trainer);
+    private WorkYear addYear(int year, Trainer trainer){
+        WorkYear workYear = new WorkYear(year);
         trainer.getWorkYears().add(workYear);
         return workYear;
     }

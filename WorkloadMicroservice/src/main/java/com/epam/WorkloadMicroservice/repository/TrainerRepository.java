@@ -1,12 +1,10 @@
 package com.epam.WorkloadMicroservice.repository;
 
 import com.epam.WorkloadMicroservice.entity.Trainer;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 
-import java.util.Optional;
-
-public interface TrainerRepository extends JpaRepository<Trainer, String> {
+public interface TrainerRepository extends MongoRepository<Trainer, String> {
 
 
 

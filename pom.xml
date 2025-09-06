@@ -46,7 +46,6 @@
 
     <modules>
         <module>task1</module>
-        <module>EurikaServer</module>
         <module>WorkloadMicroservice</module>
     </modules>
 
