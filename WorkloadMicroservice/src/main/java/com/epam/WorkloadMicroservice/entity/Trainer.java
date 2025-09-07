@@ -2,6 +2,7 @@ package com.epam.WorkloadMicroservice.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
@@ -15,6 +16,7 @@ import java.util.Set;
 @CompoundIndexes({
         @CompoundIndex(name = "trainer_name_idx", def = "{'firstName': 1, 'lastName': 1}")
 })
+@Setter
 public class Trainer {
     @Id
     private String username;

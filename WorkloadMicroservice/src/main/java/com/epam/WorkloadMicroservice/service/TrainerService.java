@@ -5,9 +5,6 @@ import com.epam.WorkloadMicroservice.entity.Trainer;
 import com.epam.WorkloadMicroservice.entity.WorkMonth;
 import com.epam.WorkloadMicroservice.entity.WorkYear;
 import com.epam.WorkloadMicroservice.repository.TrainerRepository;
-import com.epam.WorkloadMicroservice.repository.WorkMonthRepository;
-import com.epam.WorkloadMicroservice.repository.WorkYearRepository;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
