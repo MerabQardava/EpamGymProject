@@ -1,192 +1,318 @@
-//package com.epam.hw.service;
-//
-//import com.epam.hw.dto.UpdateWorkingHoursDTO;
-//
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//
-//import java.util.Optional;
-//import java.util.List;
-//import java.util.Arrays;
-//
-//import static org.mockito.Mockito.when;
-//
-//import com.epam.hw.entity.Trainee;
-//import com.epam.hw.entity.Trainer;
-//import com.epam.hw.entity.Training;
-//import com.epam.hw.entity.TrainingType;
-//import com.epam.hw.entity.User;
-//import com.epam.hw.repository.TraineeRepository;
-//import com.epam.hw.repository.TrainerRepository;
-//import com.epam.hw.repository.TrainingRepository;
-//import com.epam.hw.repository.TrainingTypeRepository;
-//import com.epam.hw.storage.Auth;
-//import org.mockito.ArgumentCaptor;
-//
-//import jakarta.persistence.EntityNotFoundException;
-//import org.mockito.junit.jupiter.MockitoSettings;
-//import org.mockito.quality.Strictness;
-//import org.springframework.http.ResponseEntity;
-//
-//import java.time.LocalDate;
-//
-//import static org.junit.jupiter.api.Assertions.*;
-//import static org.mockito.ArgumentMatchers.any;
-//import static org.mockito.Mockito.*;
-//
-//@ExtendWith(MockitoExtension.class)
-//@MockitoSettings(strictness = Strictness.LENIENT)
-//public class TrainingServiceTest {
-//
-//    @Mock TrainingRepository trainingRepo;
-//    @Mock TraineeRepository traineeRepo;
-//    @Mock TrainerRepository trainerRepo;
-//    @Mock TrainingTypeRepository trainingTypeRepo;
-//    @Mock Auth auth;
-//    @Mock WorkloadInterface workloadInterface;
-//
-//    @InjectMocks
-//    TrainingService trainingService;
-//
-//    @Test
-//    void addTraining_success() {
-//        // Arrange
-//        String traineeUsername = "john.doe";
-//        String trainerUsername = "jane.smith";
-//        String trainingTypeName = "Java";
-//        String trainingName = "Java Basics";
-//        LocalDate date = LocalDate.of(2025, 6, 15);
-//        Integer duration = 60;
-//
-//        User mockUser = new User();
-//        when(auth.getLoggedInUser()).thenReturn(mockUser);
-//
-//        // Set up Trainee with User
-//        User traineeUser = new User();
-//        traineeUser.setUsername(traineeUsername);
-//        traineeUser.setFirstName("John");
-//        Trainee trainee = new Trainee();
-//        trainee.setUser(traineeUser);
-//
-//        // Set up Trainer with User
-//        User trainerUser = new User();
-//        trainerUser.setUsername(trainerUsername);
-//        trainerUser.setFirstName("Jane");
-//        Trainer trainer = new Trainer();
-//        trainer.setUser(trainerUser);
-//
-//        TrainingType type = new TrainingType(trainingTypeName);
-//
-//        when(traineeRepo.findByUser_Username(traineeUsername)).thenReturn(Optional.of(trainee));
-//        when(trainerRepo.findByUser_Username(trainerUsername)).thenReturn(Optional.of(trainer));
-//        when(trainingTypeRepo.findByTrainingTypeName(trainingTypeName)).thenReturn(Optional.of(type));
-//
-//        when(trainingRepo.save(any(Training.class))).thenAnswer(invocation -> {
-//            Training training = invocation.getArgument(0);
-//            training.setId(10);
-//            return training;
-//        });
-//
-//        // Mock the workloadInterface response
-//        when(workloadInterface.updateWorkingHours(eq(trainerUsername), eq("ADD"), any(UpdateWorkingHoursDTO.class)))
-//                .thenReturn(ResponseEntity.ok("Workload updated successfully"));
-//
-//        // Act
-//        Training result = trainingService.addTraining(
-//                traineeUsername, trainerUsername, trainingName,
-//                trainingTypeName, date, duration);
-//
-//        // Assert
-//        ArgumentCaptor<Training> captor = ArgumentCaptor.forClass(Training.class);
-//        verify(trainingRepo).save(captor.capture());
-//        Training savedTraining = captor.getValue();
-//
-//        assertEquals(trainee, savedTraining.getTrainee());
-//        assertEquals(trainer, savedTraining.getTrainer());
-//        assertEquals(type, savedTraining.getTrainingType());
-//        assertEquals(trainingName, savedTraining.getTrainingName());
-//        assertEquals(date, savedTraining.getDate());
-//        assertEquals(duration, savedTraining.getDuration());
-//        assertEquals(10, result.getId());
-//
-//        // Verify workloadInterface interaction
-//        verify(workloadInterface).updateWorkingHours(eq(trainerUsername), eq("ADD"), any(UpdateWorkingHoursDTO.class));
-//    }
-//
-//
-//    @Test
-//    void addTraining_throwsWhenTraineeNotFound() {
-//        User mockUser = new User();
-//        when(auth.getLoggedInUser()).thenReturn(mockUser);
-//        when(traineeRepo.findByUser_Username("nonexistent")).thenReturn(Optional.empty());
-//
-//        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
-//                () -> trainingService.addTraining(
-//                        "nonexistent", "jane.smith", "Java Basics",
-//                        "Java", LocalDate.now(), 60));
-//
-//        assertEquals("Trainee not found", ex.getMessage());
-//        verify(trainingRepo, never()).save(any());
-//    }
-//
-//    @Test
-//    void addTraining_throwsWhenTrainerNotFound() {
-//        User mockUser = new User();
-//        when(auth.getLoggedInUser()).thenReturn(mockUser);
-//
-//        Trainee trainee = new Trainee();
-//        when(traineeRepo.findByUser_Username("john.doe")).thenReturn(Optional.of(trainee));
-//        when(trainerRepo.findByUser_Username("nonexistent")).thenReturn(Optional.empty());
-//
-//        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
-//                () -> trainingService.addTraining(
-//                        "john.doe", "nonexistent", "Java Basics",
-//                        "Java", LocalDate.now(), 60));
-//
-//        assertEquals("Trainer not found", ex.getMessage());
-//        verify(trainingRepo, never()).save(any());
-//    }
-//
-//    @Test
-//    void addTraining_throwsWhenTrainingTypeNotFound() {
-//        User mockUser = new User();
-//        when(auth.getLoggedInUser()).thenReturn(mockUser);
-//
-//        Trainee trainee = new Trainee();
-//        Trainer trainer = new Trainer();
-//        when(traineeRepo.findByUser_Username("john.doe")).thenReturn(Optional.of(trainee));
-//        when(trainerRepo.findByUser_Username("jane.smith")).thenReturn(Optional.of(trainer));
-//        when(trainingTypeRepo.findByTrainingTypeName("NonexistentType")).thenReturn(Optional.empty());
-//
-//        EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
-//                () -> trainingService.addTraining(
-//                        "john.doe", "jane.smith", "Java Basics",
-//                        "NonexistentType", LocalDate.now(), 60));
-//
-//        assertEquals("TrainingType not found", ex.getMessage());
-//        verify(trainingRepo, never()).save(any());
-//    }
-//
-//    @Test
-//    void getTrainingTypes_success() {
-//        User mockUser = new User();
-//        when(auth.getLoggedInUser()).thenReturn(mockUser);
-//
-//        List<TrainingType> expectedTypes = Arrays.asList(
-//                new TrainingType("Java"),
-//                new TrainingType("Python"),
-//                new TrainingType("Spring")
-//        );
-//        when(trainingTypeRepo.findAll()).thenReturn(expectedTypes);
-//
-//        List<TrainingType> result = trainingService.getTrainingTypes();
-//
-//        assertEquals(expectedTypes, result);
-//        assertEquals(3, result.size());
-//        verify(trainingTypeRepo).findAll();
-//    }
-//
-//}
+package com.epam.hw.service;
+
+import com.epam.hw.dto.ActionType;
+import com.epam.hw.dto.UpdateWorkingHoursDTO;
+import com.epam.hw.entity.Trainee;
+import com.epam.hw.entity.Trainer;
+import com.epam.hw.entity.Training;
+import com.epam.hw.entity.TrainingType;
+import com.epam.hw.entity.User;
+import com.epam.hw.messaging.MessageProducer;
+import com.epam.hw.repository.TraineeRepository;
+import com.epam.hw.repository.TrainerRepository;
+import com.epam.hw.repository.TrainingRepository;
+import com.epam.hw.repository.TrainingTypeRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class TrainingServiceTest {
+
+    @Mock
+    private TrainingRepository trainingRepo;
+
+    @Mock
+    private TraineeRepository traineeRepo;
+
+    @Mock
+    private TrainerRepository trainerRepo;
+
+    @Mock
+    private TrainingTypeRepository trainingTypeRepo;
+
+    @Mock
+    private MessageProducer messageProducer;
+
+    @InjectMocks
+    private TrainingService trainingService;
+
+    private Trainee trainee;
+    private Trainer trainer;
+    private TrainingType trainingType;
+    private Training training;
+    private User traineeUser;
+    private User trainerUser;
+
+    @BeforeEach
+    void setUp() {
+        traineeUser = new User();
+        traineeUser.setUsername("trainee.user");
+        traineeUser.setFirstName("Trainee");
+        traineeUser.setLastName("User");
+
+        trainerUser = new User();
+        trainerUser.setUsername("trainer.user");
+        trainerUser.setFirstName("Trainer");
+        trainerUser.setLastName("User");
+
+        trainee = new Trainee();
+        trainee.setUser(traineeUser);
+
+        trainer = new Trainer();
+        trainer.setUser(trainerUser);
+
+        trainingType = new TrainingType("Java");
+
+        training = new Training(trainee, trainer, "Java Training", trainingType, LocalDate.of(2025, 1, 1), 60);
+        training.setId(1);
+    }
+
+    @Test
+    void testAddTraining_Success() {
+        // Arrange
+        when(traineeRepo.findByUser_Username("trainee.user")).thenReturn(Optional.of(trainee));
+        when(trainerRepo.findByUser_Username("trainer.user")).thenReturn(Optional.of(trainer));
+        when(trainingTypeRepo.findByTrainingTypeName("Java")).thenReturn(Optional.of(trainingType));
+        when(trainingRepo.save(any(Training.class))).thenReturn(training);
+
+        // Act
+        Training result = trainingService.addTraining(
+                "trainee.user",
+                "trainer.user",
+                "Java Training",
+                "Java",
+                LocalDate.of(2025, 1, 1),
+                60
+        );
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getId());
+        assertEquals("Java Training", result.getTrainingName());
+        assertEquals(trainingType, result.getTrainingType());
+        assertEquals(trainee, result.getTrainee());
+        assertEquals(trainer, result.getTrainer());
+        assertEquals(LocalDate.of(2025, 1, 1), result.getDate());
+        assertEquals(60, result.getDuration());
+
+        verify(traineeRepo, times(1)).findByUser_Username("trainee.user");
+        verify(trainerRepo, times(1)).findByUser_Username("trainer.user");
+        verify(trainingTypeRepo, times(1)).findByTrainingTypeName("Java");
+        verify(trainingRepo, times(1)).save(any(Training.class));
+
+        ArgumentCaptor<UpdateWorkingHoursDTO> captor = ArgumentCaptor.forClass(UpdateWorkingHoursDTO.class);
+        verify(messageProducer, times(1)).sendMessage(eq("trainer.user"), captor.capture(), eq(ActionType.ADD));
+        UpdateWorkingHoursDTO sentDto = captor.getValue();
+        assertEquals("Trainer", sentDto.firstName());
+        assertEquals("User", sentDto.lastName());
+        assertTrue(sentDto.isActive());
+        assertEquals(LocalDate.of(2025, 1, 1), sentDto.date());
+        assertEquals(60, sentDto.trainingDuration());
+    }
+
+    @Test
+    void testAddTraining_TraineeNotFound() {
+        // Arrange
+        when(traineeRepo.findByUser_Username("trainee.user")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+            trainingService.addTraining(
+                    "trainee.user",
+                    "trainer.user",
+                    "Java Training",
+                    "Java",
+                    LocalDate.of(2025, 1, 1),
+                    60
+            );
+        });
+        assertEquals("Trainee not found", exception.getMessage());
+
+        verify(traineeRepo, times(1)).findByUser_Username("trainee.user");
+        verify(trainerRepo, never()).findByUser_Username(anyString());
+        verify(trainingTypeRepo, never()).findByTrainingTypeName(anyString());
+        verify(trainingRepo, never()).save(any());
+        verify(messageProducer, never()).sendMessage(anyString(), any(), any());
+    }
+
+    @Test
+    void testAddTraining_TrainerNotFound() {
+        // Arrange
+        when(traineeRepo.findByUser_Username("trainee.user")).thenReturn(Optional.of(trainee));
+        when(trainerRepo.findByUser_Username("trainer.user")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+            trainingService.addTraining(
+                    "trainee.user",
+                    "trainer.user",
+                    "Java Training",
+                    "Java",
+                    LocalDate.of(2025, 1, 1),
+                    60
+            );
+        });
+        assertEquals("Trainer not found", exception.getMessage());
+
+        verify(traineeRepo, times(1)).findByUser_Username("trainee.user");
+        verify(trainerRepo, times(1)).findByUser_Username("trainer.user");
+        verify(trainingTypeRepo, never()).findByTrainingTypeName(anyString());
+        verify(trainingRepo, never()).save(any());
+        verify(messageProducer, never()).sendMessage(anyString(), any(), any());
+    }
+
+    @Test
+    void testAddTraining_TrainingTypeNotFound() {
+        // Arrange
+        when(traineeRepo.findByUser_Username("trainee.user")).thenReturn(Optional.of(trainee));
+        when(trainerRepo.findByUser_Username("trainer.user")).thenReturn(Optional.of(trainer));
+        when(trainingTypeRepo.findByTrainingTypeName("Java")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+            trainingService.addTraining(
+                    "trainee.user",
+                    "trainer.user",
+                    "Java Training",
+                    "Java",
+                    LocalDate.of(2025, 1, 1),
+                    60
+            );
+        });
+        assertEquals("TrainingType not found", exception.getMessage());
+
+        verify(traineeRepo, times(1)).findByUser_Username("trainee.user");
+        verify(trainerRepo, times(1)).findByUser_Username("trainer.user");
+        verify(trainingTypeRepo, times(1)).findByTrainingTypeName("Java");
+        verify(trainingRepo, never()).save(any());
+        verify(messageProducer, never()).sendMessage(anyString(), any(), any());
+    }
+
+    @Test
+    void testAddTraining_Fallback() {
+        // Arrange
+        when(traineeRepo.findByUser_Username("trainee.user")).thenThrow(new RuntimeException("Database unavailable"));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            trainingService.addTraining(
+                    "trainee.user",
+                    "trainer.user",
+                    "Java Training",
+                    "Java",
+                    LocalDate.of(2025, 1, 1),
+                    60
+            );
+        });
+        assertEquals("Database unavailable", exception.getMessage());
+
+        verify(traineeRepo, times(1)).findByUser_Username("trainee.user");
+        verify(trainerRepo, never()).findByUser_Username(anyString());
+        verify(trainingTypeRepo, never()).findByTrainingTypeName(anyString());
+        verify(trainingRepo, never()).save(any());
+        verify(messageProducer, never()).sendMessage(anyString(), any(), any());
+    }
+
+    @Test
+    void testDeleteTraining_Success() {
+        // Arrange
+        when(trainingRepo.findById(1)).thenReturn(Optional.of(training));
+        doNothing().when(trainingRepo).delete(training);
+
+        // Act
+        trainingService.deleteTraining(1);
+
+        // Assert
+        verify(trainingRepo, times(1)).findById(1);
+        verify(trainingRepo, times(1)).delete(training);
+
+        ArgumentCaptor<UpdateWorkingHoursDTO> captor = ArgumentCaptor.forClass(UpdateWorkingHoursDTO.class);
+        verify(messageProducer, times(1)).sendMessage(eq("trainer.user"), captor.capture(), eq(ActionType.REMOVE));
+        UpdateWorkingHoursDTO sentDto = captor.getValue();
+        assertEquals("Trainer", sentDto.firstName());
+        assertEquals("User", sentDto.lastName());
+        assertTrue(sentDto.isActive());
+        assertEquals(LocalDate.of(2025, 1, 1), sentDto.date());
+        assertEquals(60, sentDto.trainingDuration());
+    }
+
+    @Test
+    void testDeleteTraining_NotFound() {
+        // Arrange
+        when(trainingRepo.findById(999)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+            trainingService.deleteTraining(999);
+        });
+        assertEquals("Training not found", exception.getMessage());
+
+        verify(trainingRepo, times(1)).findById(999);
+        verify(trainingRepo, never()).delete(any());
+        verify(messageProducer, never()).sendMessage(anyString(), any(), any());
+    }
+
+    @Test
+    void testDeleteTraining_Fallback() {
+        // Arrange
+        when(trainingRepo.findById(1)).thenThrow(new RuntimeException("Database unavailable"));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            trainingService.deleteTraining(1);
+        });
+        assertEquals("Database unavailable", exception.getMessage());
+
+        verify(trainingRepo, times(1)).findById(1);
+        verify(trainingRepo, never()).delete(any());
+        verify(messageProducer, never()).sendMessage(anyString(), any(), any());
+    }
+
+    @Test
+    void testGetTrainingTypes_Success() {
+        // Arrange
+        List<TrainingType> trainingTypes = List.of(
+                new TrainingType("Java"),
+                new TrainingType("Spring")
+        );
+        when(trainingTypeRepo.findAll()).thenReturn(trainingTypes);
+
+        // Act
+        List<TrainingType> result = trainingService.getTrainingTypes();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Java", result.get(0).getTrainingTypeName());
+        assertEquals("Spring", result.get(1).getTrainingTypeName());
+
+        verify(trainingTypeRepo, times(1)).findAll();
+    }
+
+    @Test
+    void testGetTrainingTypes_EmptyList() {
+        // Arrange
+        when(trainingTypeRepo.findAll()).thenReturn(List.of());
+
+        // Act
+        List<TrainingType> result = trainingService.getTrainingTypes();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+
+        verify(trainingTypeRepo, times(1)).findAll();
+    }
+}

@@ -3,17 +3,24 @@ package com.epam.hw.controller;
 import com.epam.hw.dto.*;
 import com.epam.hw.entity.*;
 import com.epam.hw.monitoring.CustomMetricsService;
+
+import com.epam.hw.security.BruteForceProtectionService;
+import com.epam.hw.service.JWTService;
 import com.epam.hw.service.TraineeService;
+import com.epam.hw.service.UserService;
 import com.epam.hw.storage.LoginResults;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Timer;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -26,6 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(TraineeController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class TraineeControllerTest {
 
     @Autowired
@@ -39,6 +47,19 @@ public class TraineeControllerTest {
 
     @MockBean
     private CustomMetricsService metricsService;
+
+    @MockBean
+    private UserService userService;
+
+    @MockBean
+    private BruteForceProtectionService bruteForceProtectionService;
+
+    @MockBean
+    private JWTService jwtService;
+
+
+    @MockBean
+    private PasswordEncoder passwordEncoder;
 
 //    @Test
 //    void testRegisterTrainee() throws Exception {
@@ -130,7 +151,8 @@ public class TraineeControllerTest {
         UserPasswordChangeDTO dto = new UserPasswordChangeDTO("oldPass", "newPass");
         Trainee trainee = new Trainee();
         User user = new User();
-        user.setPassword("oldPass");
+        user.setUsername("john.doe");
+        user.setPassword("$2a$10$exampleHashForOldPass1234567890"); // Simulate a valid BCrypt hash
         trainee.setUser(user);
 
         Timer requestTimer = mock(Timer.class);
@@ -138,6 +160,8 @@ public class TraineeControllerTest {
 
         when(metricsService.getRequestTimer()).thenReturn(requestTimer);
         when(traineeService.getTraineeByUsername("john.doe")).thenReturn(trainee);
+        when(passwordEncoder.matches("oldPass", "$2a$10$exampleHashForOldPass1234567890")).thenReturn(true);
+        when(userService.changeTraineePassword("john.doe", "newPass")).thenReturn(true);
 
         try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
             timerMock.when(Timer::start).thenReturn(timerSample);
@@ -147,6 +171,9 @@ public class TraineeControllerTest {
                             .content(objectMapper.writeValueAsString(dto)))
                     .andExpect(status().isOk())
                     .andExpect(content().string("Password changed successfully"));
+
+            verify(passwordEncoder, times(1)).matches("oldPass", "$2a$10$exampleHashForOldPass1234567890");
+            verify(userService, times(1)).changeTraineePassword("john.doe", "newPass");
         }
     }
 
@@ -171,7 +198,7 @@ public class TraineeControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(dto)))
                     .andExpect(status().isUnauthorized())
-                    .andExpect(content().string("Invalid Credentials"));
+                    .andExpect(content().string("Invalid current password"));
         }
     }
 
