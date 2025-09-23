@@ -101,6 +101,7 @@ public class TraineeService {
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             Trainee trainee = user.getTrainee();
+            System.out.println("mech");
 
             if (trainee != null) {
                 traineeRepository.delete(trainee);
