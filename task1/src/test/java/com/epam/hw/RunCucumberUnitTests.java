@@ -1,4 +1,4 @@
-package com.epam.hw.unit;
+package com.epam.hw;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
