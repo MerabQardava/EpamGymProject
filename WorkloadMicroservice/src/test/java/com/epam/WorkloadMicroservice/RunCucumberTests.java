@@ -1,4 +1,4 @@
-package com.epam.WorkloadMicroservice.unit;
+package com.epam.WorkloadMicroservice;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
@@ -10,5 +10,5 @@ import org.junit.runner.RunWith;
         glue = {"com.epam.WorkloadMicroservice.unit.steps", "com.epam.WorkloadMicroservice"},
         plugin = {"pretty", "html:target/cucumber-unit-report.html"}
 )
-public class RunCucumberUnitTests {
+public class RunCucumberTests {
 }
