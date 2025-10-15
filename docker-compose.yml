@@ -1,0 +1,95 @@
+version: "3.9"
+
+networks:
+  my_app_network:
+    driver: bridge
+
+services:
+  # PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mechomecho123
+      POSTGRES_DB: EpamProject1
+    networks:
+      - my_app_network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      retries: 10
+
+  # MongoDB
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: workloaddb
+    networks:
+      - my_app_network
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      retries: 10
+
+  # ActiveMQ
+  activemq:
+    image: rmohr/activemq:latest
+    container_name: activemq
+    networks:
+      - my_app_network
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8161/"]
+      interval: 10s
+      retries: 10
+
+
+  # Microservice 1
+  microservice1:
+    build:
+      context: ./task1
+      dockerfile: Dockerfile.dev
+    container_name: task1
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    networks:
+      - my_app_network
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      activemq:
+        condition: service_healthy
+
+  # Microservice 2
+  microservice2:
+    build:
+      context: ./WorkloadMicroservice
+      dockerfile: Dockerfile.dev
+    container_name: WorkloadMicroservice
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    networks:
+      - my_app_network
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      activemq:
+        condition: service_healthy

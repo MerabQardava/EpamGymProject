@@ -201,6 +201,14 @@
 			<artifactId>h2</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-broker</artifactId>
+			<version>5.18.4</version>
+			<scope>test</scope>
+		</dependency>
+
+
 
 	</dependencies>
 
