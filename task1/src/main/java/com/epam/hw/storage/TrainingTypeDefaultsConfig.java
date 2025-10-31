@@ -32,4 +32,10 @@ public class TrainingTypeDefaultsConfig {
     public List<String> prodTrainingTypeDefaults() {
         return List.of("Java", "Spring Boot", "Docker");
     }
+
+    @Bean
+    @Profile("test")
+    public List<String> testTrainingTypeDefaults() {
+        return List.of("Java", "Spring Boot", "Docker");
+    }
 }
